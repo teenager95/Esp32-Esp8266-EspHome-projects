@@ -1,0 +1,87 @@
+esphome:
+  name: kopalnica
+  platform: ESP8266
+  board: nodemcuv2
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+
+ota:
+  password: "658edc179a04cc86ef761191346ba84f"
+
+wifi:
+  ssid: "!secret SSID"
+  password: "!secret SSID_pass"
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Kopalnica Fallback Hotspot"
+    password: "sN0uTjj3swEo"
+
+captive_portal:
+
+sensor:
+
+##########################
+#       DTH22
+##########################
+  - platform: dht
+    pin: D2
+    temperature:
+      name: "Kopalnica Temperatura"
+    humidity:
+      name: "Kopalnica Vlaga"
+    update_interval: 20s   
+    model: DHT22_TYPE2
+
+##########################    
+#    CT klešče
+##########################    
+  - platform: ct_clamp
+    sensor: adc_sensor
+    name: "Električni tok sušilnega stroja"
+    unit_of_measurement: "A"
+    icon: "mdi:flash-circle"
+    id: dryer_current
+    update_interval: 20s
+    filters:
+      - calibrate_linear:
+          - 0.0 -> 0.0
+          - 0.058 -> 7.00
+    on_value:
+      then:
+        - sensor.template.publish:
+            id: dryer_code
+            # codes: 0 Mirovanje, 1 Door Open odprta vrata, 2 Drying šušenje
+            state: !lambda |-
+              if (x > 5) return 2; 
+              return 0;
+
+
+  - platform: template
+    id: dryer_code
+    internal: true
+
+    on_value:
+      then:
+        - text_sensor.template.publish:
+            id: dryer
+            state: !lambda |-
+              if (x == 2) return "Šušenje perila";
+              return "Mirovanje";
+
+              
+  - platform: adc
+    pin: A0
+    id: adc_sensor
+    update_interval: 60s
+
+text_sensor:
+  - platform: template
+    name: "Šušilni stroj"
+    id: dryer
+    icon: "mdi:tumble-dryer"
+    update_interval: 20s
