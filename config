@@ -1,0 +1,52 @@
+esphome:
+  name: Weather station example
+  platform: ESP8266
+  board: nodemcuv2
+
+
+
+wifi:
+  ssid: !secret ssid_primary
+  password: !secret ssid_password
+  use_address: 192.168.0.199
+  manual_ip:
+    static_ip: 192.168.0.199
+    gateway: 192.168.0.1
+    subnet: 255.255.255.0
+    dns1: 192.168.0.1
+    dns2: 1.0.0.1
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Fallback Hotspot"
+    password: "Jn6OMaKeeaXb"
+
+captive_portal:
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+
+ota:
+
+i2c:
+#  sda: 21
+#  scl: 22
+  scan: True
+  id: bus_a
+
+sensor:
+  - platform: bme280
+    temperature:
+      name: "BME280 Temperature"
+      oversampling: 16x
+    pressure:
+      name: "BME280 Pressure"
+    humidity:
+      name: "BME280 Humidity"
+    address: 0x76
+    update_interval: 10s
+    i2c_id: bus_a
+    
